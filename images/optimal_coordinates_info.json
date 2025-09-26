@@ -1,0 +1,12 @@
+{
+  "optimal_coordinates": {
+    "name": "optimal_final",
+    "x": 135,
+    "y": 438,
+    "width": 615,
+    "height": 62,
+    "description": "基于网格精确观察的最优坐标"
+  },
+  "measurement_method": "grid_based_visual_analysis",
+  "notes": "基于25像素网格进行精确视觉测量"
+}

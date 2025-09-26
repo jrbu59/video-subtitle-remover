@@ -1,0 +1,79 @@
+{
+  "original_gemini_detection": {
+    "x": 230,
+    "y": 180,
+    "width": 540,
+    "height": 80,
+    "confidence": 0.95,
+    "text_content": "配料表只有黑果枸杞"
+  },
+  "improved_correction": {
+    "x": 160,
+    "y": 440,
+    "width": 580,
+    "height": 50,
+    "confidence": 0.95,
+    "text_content": "配料表只有黑果枸杞",
+    "correction_info": {
+      "method": "precise_actual_coordinates",
+      "error_analysis": {
+        "position_error": {
+          "x_diff": -70,
+          "y_diff": 260,
+          "x_diff_percent": -5.555555555555555,
+          "y_diff_percent": 11.570983533600355
+        },
+        "size_error": {
+          "width_diff": 40,
+          "height_diff": -30,
+          "width_scale_needed": 1.0740740740740742,
+          "height_scale_needed": 0.625
+        },
+        "gemini_coords": [
+          230,
+          180,
+          540,
+          80
+        ],
+        "actual_coords": [
+          160,
+          440,
+          580,
+          50
+        ]
+      },
+      "correction_applied": "使用实际观察坐标: (160, 440) 580x50"
+    }
+  },
+  "error_analysis": {
+    "position_error": {
+      "x_diff": -70,
+      "y_diff": 260,
+      "x_diff_percent": -5.555555555555555,
+      "y_diff_percent": 11.570983533600355
+    },
+    "size_error": {
+      "width_diff": 40,
+      "height_diff": -30,
+      "width_scale_needed": 1.0740740740740742,
+      "height_scale_needed": 0.625
+    },
+    "gemini_coords": [
+      230,
+      180,
+      540,
+      80
+    ],
+    "actual_coords": [
+      160,
+      440,
+      580,
+      50
+    ]
+  },
+  "files_generated": {
+    "comparison": "./images/improved_correction_comparison.jpg",
+    "mask": "./images/improved_correction_mask.jpg",
+    "result": "./images/improved_correction_result.jpg"
+  }
+}

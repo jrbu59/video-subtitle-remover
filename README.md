@@ -175,6 +175,260 @@ python gui.py
 
 ```shell
 python ./backend/main.py
+
+echo "videos/segment_001.mp4" | python ./backend/main.py
+```
+
+- 运行API服务
+
+```shell
+# 安装API依赖
+pip install -r requirements-api.txt
+
+# 启动API服务
+cd backend/api
+python main.py
+
+# 或使用uvicorn启动
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+## API服务使用说明
+
+VSR提供了完整的RESTful API服务，支持远程调用和集成到其他应用中。
+
+### 📖 API文档
+
+启动API服务后，可通过以下地址访问完整的API文档：
+
+- **Swagger UI（推荐）**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **根路径自动重定向**: http://localhost:8000/
+
+### 🚀 快速开始
+
+#### 1. 启动API服务
+
+```bash
+# 方式1：直接运行
+cd backend/api
+python main.py
+
+# 方式2：使用uvicorn
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+# 方式3：生产环境部署
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+#### 2. 基础API调用流程
+
+```bash
+# 1. 上传视频文件
+curl -X POST "http://localhost:8000/api/upload" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_video.mp4" \
+  -F "algorithm=sttn"
+
+# 返回示例:
+# {
+#   "success": true,
+#   "message": "文件上传成功",
+#   "task_id": "123e4567-e89b-12d3-a456-426614174000",
+#   "file_info": {...}
+# }
+
+# 2. 开始处理
+curl -X POST "http://localhost:8000/api/process" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "task_id=123e4567-e89b-12d3-a456-426614174000"
+
+# 3. 查询处理状态
+curl "http://localhost:8000/api/task/123e4567-e89b-12d3-a456-426614174000"
+
+# 4. 下载处理结果
+curl -O "http://localhost:8000/api/download/123e4567-e89b-12d3-a456-426614174000"
+```
+
+### 🎯 支持的算法
+
+| 算法 | 描述 | 适用场景 | 特点 |
+|------|------|----------|------|
+| **STTN** | 空间-时间转换网络 | 真人视频 | 速度快，可跳过检测 |
+| **LAMA** | 大掩码修复 | 动画视频 | 效果好，适合静态内容 |
+| **ProPainter** | 传播修复 | 高运动场景 | 高质量，需大显存 |
+
+### 📝 详细API说明
+
+#### 上传文件 POST `/api/upload`
+
+**支持格式:**
+- 视频: MP4, AVI, MOV, MKV, WMV, FLV, WebM, M4V
+- 图片: JPG, JPEG, PNG, BMP, TIFF, WebP
+
+**参数:**
+- `file`: 文件 (必需)
+- `algorithm`: 算法选择 (可选，默认sttn)
+- `subtitle_regions`: 字幕区域JSON (可选)
+- `config_override`: 配置覆盖JSON (可选)
+
+#### 字幕区域指定
+
+```bash
+# 指定字幕区域示例
+curl -X POST "http://localhost:8000/api/upload" \
+  -F "file=@video.mp4" \
+  -F "algorithm=sttn" \
+  -F 'subtitle_regions=[[100,400,200,500],[300,600,400,700]]'
+```
+
+#### 配置参数覆盖
+
+```bash
+# 自定义算法参数
+curl -X POST "http://localhost:8000/api/upload" \
+  -F "file=@video.mp4" \
+  -F "algorithm=sttn" \
+  -F 'config_override={"STTN_SKIP_DETECTION":true,"STTN_NEIGHBOR_STRIDE":10}'
+```
+
+### 🔧 高级配置
+
+#### Python SDK示例
+
+```python
+import requests
+import json
+
+# API基础URL
+BASE_URL = "http://localhost:8000/api"
+
+def upload_and_process(video_path, algorithm="sttn", subtitle_regions=None):
+    """上传并处理视频"""
+
+    # 1. 上传文件
+    with open(video_path, 'rb') as f:
+        files = {'file': f}
+        data = {'algorithm': algorithm}
+
+        if subtitle_regions:
+            data['subtitle_regions'] = json.dumps(subtitle_regions)
+
+        response = requests.post(f"{BASE_URL}/upload", files=files, data=data)
+        result = response.json()
+
+        if not result['success']:
+            raise Exception(f"上传失败: {result['message']}")
+
+        task_id = result['task_id']
+        print(f"上传成功，任务ID: {task_id}")
+
+    # 2. 开始处理
+    response = requests.post(f"{BASE_URL}/process", data={'task_id': task_id})
+    if response.status_code != 200:
+        raise Exception("启动处理失败")
+
+    # 3. 轮询状态
+    while True:
+        response = requests.get(f"{BASE_URL}/task/{task_id}")
+        task_info = response.json()
+
+        status = task_info['status']
+        progress = task_info['progress']
+
+        print(f"处理状态: {status}, 进度: {progress:.1f}%")
+
+        if status == 'completed':
+            download_url = task_info['download_url']
+            print(f"处理完成! 下载地址: {BASE_URL}{download_url}")
+            break
+        elif status == 'failed':
+            print(f"处理失败: {task_info.get('error_message', '未知错误')}")
+            break
+
+        time.sleep(5)  # 5秒后再次查询
+
+# 使用示例
+upload_and_process("test_video.mp4", algorithm="sttn")
+```
+
+#### JavaScript/Node.js示例
+
+```javascript
+const FormData = require('form-data');
+const fs = require('fs');
+const axios = require('axios');
+
+async function processVideo(videoPath, algorithm = 'sttn') {
+    const baseURL = 'http://localhost:8000/api';
+
+    // 1. 上传文件
+    const form = new FormData();
+    form.append('file', fs.createReadStream(videoPath));
+    form.append('algorithm', algorithm);
+
+    const uploadResponse = await axios.post(`${baseURL}/upload`, form, {
+        headers: form.getHeaders()
+    });
+
+    const { task_id } = uploadResponse.data;
+    console.log(`上传成功，任务ID: ${task_id}`);
+
+    // 2. 开始处理
+    await axios.post(`${baseURL}/process`, { task_id });
+
+    // 3. 轮询状态
+    while (true) {
+        const statusResponse = await axios.get(`${baseURL}/task/${task_id}`);
+        const { status, progress, download_url } = statusResponse.data;
+
+        console.log(`状态: ${status}, 进度: ${progress}%`);
+
+        if (status === 'completed') {
+            console.log(`处理完成! 下载: ${baseURL}${download_url}`);
+            break;
+        } else if (status === 'failed') {
+            console.log('处理失败');
+            break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+}
+```
+
+### 🐳 Docker API部署
+
+```bash
+# 构建API服务镜像
+docker build -t vsr-api .
+
+# 运行API容器
+docker run -d \
+  --name vsr-api \
+  --gpus all \
+  -p 8000:8000 \
+  -v ./storage:/app/backend/api/storage \
+  vsr-api
+
+# 查看API文档
+open http://localhost:8000/docs
+```
+
+### 📊 监控和管理
+
+```bash
+# 获取服务健康状态
+curl http://localhost:8000/api/health
+
+# 获取任务统计
+curl http://localhost:8000/api/tasks/stats
+
+# 获取支持的算法列表
+curl http://localhost:8000/api/algorithms
+
+# 清理过期任务
+curl -X POST http://localhost:8000/api/tasks/cleanup
 ```
 
 ## 常见问题

@@ -1,0 +1,9 @@
+# API服务依赖
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+aiofiles>=23.0.0
+pydantic>=2.0.0
+
+# 基础依赖（从主requirements.txt继承）
+# 注意：需要先安装主requirements.txt中的依赖

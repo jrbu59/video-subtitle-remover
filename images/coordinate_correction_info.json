@@ -1,0 +1,114 @@
+{
+  "original_detection": {
+    "has_subtitles": true,
+    "subtitle_type": "hard",
+    "dominant_position": "top",
+    "image_info": {
+      "estimated_width": 720,
+      "estimated_height": 1280
+    },
+    "regions": [
+      {
+        "x": 225,
+        "y": 175,
+        "width": 270,
+        "height": 50,
+        "confidence": 0.95,
+        "text_content": "配料表只有黑果枸杞",
+        "relative_position": {
+          "x_percent": 0.3125,
+          "y_percent": 0.1367,
+          "width_percent": 0.375,
+          "height_percent": 0.039
+        }
+      },
+      {
+        "x": 940,
+        "y": 940,
+        "width": 80,
+        "height": 30,
+        "confidence": 0.9,
+        "text_content": "倍速",
+        "relative_position": {
+          "x_percent": 0.78,
+          "y_percent": 0.73,
+          "width_percent": 0.11,
+          "height_percent": 0.023
+        }
+      }
+    ]
+  },
+  "corrected_regions": [
+    {
+      "x": 155,
+      "y": 445,
+      "width": 288,
+      "height": 31,
+      "confidence": 0.95,
+      "text_content": "配料表只有黑果枸杞",
+      "relative_position": {
+        "x_percent": 0.3125,
+        "y_percent": 0.1367,
+        "width_percent": 0.375,
+        "height_percent": 0.039
+      },
+      "correction_info": {
+        "position_type": "top_subtitle",
+        "rule_applied": "顶部字幕校正规则",
+        "original_coords": [
+          225,
+          175,
+          270,
+          50
+        ],
+        "corrected_coords": [
+          155,
+          445,
+          288,
+          31
+        ]
+      }
+    },
+    {
+      "x": 870,
+      "y": 1210,
+      "width": 85,
+      "height": 18,
+      "confidence": 0.9,
+      "text_content": "倍速",
+      "relative_position": {
+        "x_percent": 0.78,
+        "y_percent": 0.73,
+        "width_percent": 0.11,
+        "height_percent": 0.023
+      },
+      "correction_info": {
+        "position_type": "middle_subtitle",
+        "rule_applied": "顶部字幕校正规则",
+        "original_coords": [
+          940,
+          940,
+          80,
+          30
+        ],
+        "corrected_coords": [
+          870,
+          1210,
+          85,
+          18
+        ]
+      }
+    }
+  ],
+  "correction_summary": {
+    "total_regions": 2,
+    "image_size": {
+      "width": 1260,
+      "height": 2247
+    },
+    "correction_rules_applied": [
+      "顶部字幕校正规则",
+      "顶部字幕校正规则"
+    ]
+  }
+}

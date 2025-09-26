@@ -1,0 +1,31 @@
+{
+  "has_subtitles": true,
+  "subtitle_type": "hard",
+  "dominant_position": "top",
+  "regions": [
+    {
+      "x": 230,
+      "y": 170,
+      "width": 540,
+      "height": 80,
+      "confidence": 0.95,
+      "text_content": "配料表只有黑果枸杞"
+    },
+    {
+      "x": 10,
+      "y": 940,
+      "width": 120,
+      "height": 40,
+      "confidence": 0.9,
+      "text_content": "00:03 / 00:10"
+    },
+    {
+      "x": 880,
+      "y": 940,
+      "width": 80,
+      "height": 40,
+      "confidence": 0.9,
+      "text_content": "倍速"
+    }
+  ]
+}

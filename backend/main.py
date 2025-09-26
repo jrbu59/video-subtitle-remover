@@ -2,11 +2,16 @@ import torch
 import shutil
 import subprocess
 import os
+import sys
 from pathlib import Path
 import threading
 import cv2
-import sys
 from functools import cached_property
+
+# 添加日志导入
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -44,7 +49,18 @@ class SubtitleDetect:
         from paddleocr.tools.infer.predict_det import TextDetector
         # 获取参数对象
         importlib.reload(config)
-        args = utility.parse_args()
+
+        # 保存原始 sys.argv，避免 API 服务器参数干扰 PaddleOCR 参数解析
+        import sys
+        original_argv = sys.argv.copy()
+        # 临时设置为只包含脚本名的参数列表，避免解析冲突
+        sys.argv = [sys.argv[0]]
+        try:
+            args = utility.parse_args()
+        finally:
+            # 恢复原始参数
+            sys.argv = original_argv
+
         args.det_algorithm = 'DB'
         args.det_model_dir = self.convertToOnnxModelIfNeeded(config.DET_MODEL_PATH)
         args.use_onnx=len(config.ONNX_PROVIDERS) > 0
@@ -98,11 +114,44 @@ class SubtitleDetect:
                 for coordinate in coordinate_list:
                     xmin, xmax, ymin, ymax = coordinate
                     if self.sub_area is not None:
-                        s_ymin, s_ymax, s_xmin, s_xmax = self.sub_area
-                        if (s_xmin <= xmin and xmax <= s_xmax
-                                and s_ymin <= ymin
-                                and ymax <= s_ymax):
-                            temp_list.append((xmin, xmax, ymin, ymax))
+                        # 检查sub_area是否为多个区域的列表
+                        if isinstance(self.sub_area, list) and len(self.sub_area) > 0 and isinstance(self.sub_area[0], tuple):
+                            # 多区域模式：检查检测到的文本是否在任意一个区域内
+                            text_in_region = False
+                            if current_frame_no == 1:  # 只在第一帧打印，避免过多日志
+                                print(f'[Debug] Multi-region mode: {len(self.sub_area)} regions')
+                                print(f'[Debug] Detected text: xmin={xmin}, xmax={xmax}, ymin={ymin}, ymax={ymax}')
+
+                            for i, area in enumerate(self.sub_area):
+                                s_ymin, s_ymax, s_xmin, s_xmax = area
+                                if current_frame_no == 1:
+                                    print(f'[Debug] Checking region {i+1}: ymin={s_ymin}, ymax={s_ymax}, xmin={s_xmin}, xmax={s_xmax}')
+
+                                # 检查文本是否完全在当前区域内
+                                if (s_xmin <= xmin and xmax <= s_xmax
+                                        and s_ymin <= ymin
+                                        and ymax <= s_ymax):
+                                    text_in_region = True
+                                    if current_frame_no == 1:
+                                        print(f'[Debug] ✅ Text matches region {i+1}')
+                                    break
+
+                            if text_in_region:
+                                temp_list.append((xmin, xmax, ymin, ymax))
+                            elif current_frame_no == 1:
+                                print(f'[Debug] ❌ Text not in any region, ignoring')
+
+                        else:
+                            # 单区域模式（向后兼容）
+                            s_ymin, s_ymax, s_xmin, s_xmax = self.sub_area
+                            if current_frame_no == 1:
+                                print(f'[Debug] Single-region mode: ymin={s_ymin}, ymax={s_ymax}, xmin={s_xmin}, xmax={s_xmax}')
+                                print(f'[Debug] Detected text: xmin={xmin}, xmax={xmax}, ymin={ymin}, ymax={ymax}')
+                                print(f'[Debug] Check: {s_xmin} <= {xmin} <= {xmax} <= {s_xmax} and {s_ymin} <= {ymin} <= {ymax} <= {s_ymax}')
+                            if (s_xmin <= xmin and xmax <= s_xmax
+                                    and s_ymin <= ymin
+                                    and ymax <= s_ymax):
+                                temp_list.append((xmin, xmax, ymin, ymax))
                     else:
                         temp_list.append((xmin, xmax, ymin, ymax))
                 if len(temp_list) > 0:
